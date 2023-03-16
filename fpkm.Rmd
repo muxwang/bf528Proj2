@@ -1,0 +1,48 @@
+---
+title: "FPKM plot"
+author: "Daniel Glukhov"
+date: "2023-03-15"
+output: html_document
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+setwd("~/bf528Proj2")
+
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(plotrix)
+```
+
+Read in Data:
+```{r}
+P0 <- read_delim("genes_fpkm.tsv", delim="\t")
+head(P0)
+```
+
+Scale counts:
+```{r}
+#filter out genes with no expression, then calculate quantiles to limit our future histogram plot by
+x <- filter(P0,FPKM>0)%>%select(FPKM)
+q <- quantile(x$FPKM, probs = c(5)/100)
+print(q)#gives us cutoff values of 0.00710672 and 778.14928000
+```
+```{r}
+#with a cutoff at a z-score of <0.05, plot the FPKM distribution
+y <- P0%>%filter(FPKM>=0.0430129)%>%select(FPKM)%>%as.data.frame()#%>%filter(FPKM>=0.00710672&FPKM<=778.14928000)
+h <- hist(log10(y[,]), breaks = 200)
+plot(h, xlab="log10(FPKM)", ylab="Genes", main="Distribution of gene expression levels")
+```
+
+
+
+
+
+
+
+
+
+
+
