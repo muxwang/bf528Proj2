@@ -9,6 +9,8 @@ Code - Analyst code for Project 2 Analysis
 Project Deliverables:
 
 Data Curator:
+- Code: run_extract.qsub
+- results of FastQC: ./samples/data_curator on SCC
 
 Programmer:
 
@@ -18,3 +20,7 @@ Analyst:
 - Downregulated significant genes: down_reg_DAVID_results.txt
 - Table of top 10 differentially expressed genes: In paper
 - Table summarizing top clusters from DAVID: In paper
+
+
+Workflow:
+https://github.com/muxwang/bf528Proj2/blob/main/Group_7%20workflow.png
