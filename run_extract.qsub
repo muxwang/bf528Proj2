@@ -9,9 +9,11 @@ echo "Running job $JOB_ID"
 echo "Started: $(date +%F)"
 echo "Running in directory: $PWD"
 
-# your commands here
+# load SRA toolkit
 module load sratoolkit
+# prefetching data as .sra file
 prefetch SRR1727914
+# extract .sra files into fastq files
 fasterq-dump SRR1727914
 
 echo "remember to check the fastq files"
