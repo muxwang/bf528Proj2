@@ -8,6 +8,6 @@ Data Curator:
 Programmer:
 
 Analyst:
-- Code:
-- Upregulated significant genes:
-- Downregulated significant genes:
+- Code: Project2_Analyst_Code.Rmd
+- Upregulated significant genes: Up_reg_DAVID_annotations.txt
+- Downregulated significant genes: down_reg_DAVID_results.txt
