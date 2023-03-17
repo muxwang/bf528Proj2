@@ -1,0 +1,182 @@
+---
+title: "Proj 2 P01 Data Analyst Script"
+author: "Ashley Morrison"
+output:
+  html_document: default
+  pdf_document: default
+date: "2023-02-25"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("/projectnb/bf528/users/group_7/project_2/code/analyst")
+
+library(dplyr)
+library(ggplot2)
+library(ggbreak) 
+#install.packages("kableExtra")
+library(kableExtra)
+```
+
+__Part 1__
+
+Load the file cuffdiff_out/gene_exp.diff into R. Sort the data frame so that the smallest q_values are at the top (hint: look at the order function). Produce a table of the top ten differentially expressed genes, with their names, FPKM values, log fold change, p-value, and q-value in your report.
+
+Info on the cuffdiff package: http://cole-trapnell-lab.github.io/cufflinks/cuffdiff/
+```{r}
+gene_exprs <- read.delim("../../samples/analyst_data/gene_exp.diff")
+head(gene_exprs)
+
+## sorting data by q-value
+sorted_gene_exprs <- gene_exprs %>% arrange(q_value)
+head(sorted_gene_exprs)
+
+## making table
+table_data <- sorted_gene_exprs %>% select(gene,value_1,value_2, log2.fold_change., p_value,q_value)
+colnames(table_data) <- c("Gene Name","P0 FPKM","Adult FPKM","L2FC", "p-value", "q-value")
+head(table_data)
+
+#seeing how many samples have the same smallest q_value:
+sum(table_data$`q-value`== 0.000318974) #2319
+nrow(table_data) #36329 genes total
+
+#lots of genes have same smallest q-value, so sort by q-value and then by L2FC
+table_data2 <- table_data[order(table_data[,"q-value"],-abs(table_data[,"L2FC"])),]
+head(table_data2)
+
+#remove -Inf samples from top ten table:
+final_table_data <- table_data2 %>% filter(L2FC!=-Inf & L2FC!=Inf)
+head(final_table_data)
+
+write.table(final_table_data[1:10,], file="top_10_diff_expressed_genes_P0_adult.csv")
+```
+Formating Table for report:
+```{r}
+#sorted by L2FC:
+final_table_data[1:10,] %>%
+  kbl(caption = "") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+#not sorted by L2FC:
+table_data[1:10,] %>%
+  kbl(caption = "") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+```
+
+
+__Part 2__
+
+Produce a histogram of the log2.foldchange column for all genes with the hist function. Try specifying different values for the breaks argument to control the number of bars in the plot and pick one you like best.
+```{r}
+pdf(file="P0_v_Adult_L2FC.pdf",height = 3,width=8)
+
+ggplot(sorted_gene_exprs,aes(log2.fold_change.))+
+  geom_histogram(binwidth = 0.1,bins = 1000)+ #adjust binwidth for better visualization
+  ylim(0,15000)+ #set y-axis limits
+  scale_y_break(c(1000, 14500),ticklabels=c(14500,15000))+ #adjust y-axis breaks for better visualization
+  ggtitle("Distribtution of L2FC Between P0 and Adult Samples")+
+  xlab("L2FC")
+
+dev.off()
+
+#look for most common L2FC value:
+sort(table(sorted_gene_exprs$log2.fold_change.), decreasing = TRUE)[1:5]
+  
+```
+
+
+__Part 3__
+
+Create a new data frame that contains only the genes where the last column, named significant, is equal to yes. The subset function is useful for this kind of task, for example if df is a data frame with a column named A, then we can write df.sub <- subset(df,A==”x”). Note the nominal p-value and q-value that these genes have in your report.
+```{r}
+#subset by only significant genes
+signf_genes <- gene_exprs %>% filter(significant=="yes")
+head(signf_genes)
+nrow(signf_genes) #5193 genes
+
+```
+
+__Part 4__
+
+Create a second histogram of the log2 fold change values only for significant genes. What do you notice?
+```{r}
+pdf(file="Signif_P0_v_Adult_L2FC.pdf",height = 3,width=8)
+ggplot(signf_genes,aes(log2.fold_change.))+
+  geom_histogram(binwidth = 0.1,bins = 1000)+
+  ggtitle("Distribtution of significant L2FC between P0 and Adult Samples")+
+  xlab("L2FC")
+dev.off()
+
+#find the smallest still significant LF2C values and corresponding genes
+sort((signf_genes$log2.fold_change.[signf_genes$log2.fold_change.>0]))[1:4]
+sort((signf_genes$log2.fold_change.[signf_genes$log2.fold_change.<0]), decreasing = TRUE)[1:4]
+
+signf_genes[signf_genes$log2.fold_change.==0.486609,] #Fh1
+signf_genes[signf_genes$log2.fold_change.==-0.490812,] #Rpl28
+
+
+
+```
+
+__Part 5__
+
+Further subset the significant gene data frame you just created into two separate data frames with only the up- and down-regulated genes using the log2.foldchange column. Include the number of up and down regulated genes in your report.
+
+```{r}
+#filter by genes with positive values (up-regulated in adult compared to P0)
+signif_up <- signf_genes %>% filter(log2.fold_change. > 0) %>% arrange(q_value)
+nrow(signif_up)
+
+#filter by genes with negative values (down-regulated in adult compared to P0)
+signif_down <- signf_genes %>% filter(log2.fold_change. < 0) %>% arrange(q_value)
+nrow(signif_down)
+```
+
+__Part 6__
+
+Using the write function, write out the up- and down- regulated gene names to separate files. The files should have one gene name on each line (leave genes that are separated by commas on the same line as is). Copy these files to your laptop or desktop, as we will be uploading them to a web application to perform gene set analysis.
+```{r}
+write.csv(signif_up[,"gene"],"up_regulated_genes.csv") #pull just gene column for up-regulated genes
+write.csv(signif_down[,"gene"],"down_regulated_genes.csv") #pull just gene column for down-regulated genes
+```
+
+Making table of top GO terms:
+```{r}
+top_GO <- read.csv("top3_clusters.csv")
+
+colnames(top_GO)[colnames(top_GO)=='X..of.total.Genes'] <- "Percent of Total Genes"
+colnames(top_GO)[colnames(top_GO)=='Gene.Count'] <- "Gene Count"
+
+#change ~ so the final table formats correctly:
+top_GO <- data.frame(lapply(top_GO, function(x) {
+  gsub("~"," ~ ",x)
+}))
+head(top_GO)
+
+#clusters for genes higher in adult compared to P0 (the genes with positive LFC)
+up_go <- top_GO %>% filter(Direction=="Up")
+
+#clusters for genes higher in P0 compared to adult (the genes with negative LFC)
+down_go <- top_GO %>% filter(Direction=="Down")
+```
+
+Table for Terms
+```{r,results = "asis"}
+
+#downregulated:
+kbl(down_go[,4:9], caption = "GO Terms Upregulated in P0 Compared to Adult") %>% 
+  pack_rows("Annotation Cluster 1, Enrichment Score = 30.78288", 1, 3) %>%
+  pack_rows("Annotation Cluster 2, Enrichment Score = 25.77239", 4, 14) %>%
+  pack_rows("Annotation Cluster 3, Enrichment Score = 25.33406", 15, 17) %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+#upregulated:
+kbl(up_go[,4:9], caption = "GO Terms Downregulated in P0 Compared to Adult") %>% 
+  pack_rows("Annotation Cluster 1, Enrichment Score = 69.09126", 1, 7) %>%
+  pack_rows("Annotation Cluster 2, Enrichment Score = 47.50504", 8, 24) %>%
+  pack_rows("Annotation Cluster 3, Enrichment Score = 47.50504", 25, 27) %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+
+```
