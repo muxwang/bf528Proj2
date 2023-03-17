@@ -23,4 +23,4 @@ Analyst:
 
 
 Workflow:
-https://github.com/muxwang/bf528Proj2/blob/main/Group_7%20workflow.png
+- Project 2 Workflow: Project_2_Workflow.png
