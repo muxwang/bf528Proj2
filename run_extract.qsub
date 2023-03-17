@@ -1,0 +1,20 @@
+#i!/bin/bash -l:
+
+#$ -P bf528
+#$ -cwd
+#$ -j y
+#$ -pe mpi_16_tasks_per_node 16
+
+echo "Running job $JOB_ID"
+echo "Started: $(date +%F)"
+echo "Running in directory: $PWD"
+
+# your commands here
+module load sratoolkit
+prefetch SRR1727914
+fasterq-dump SRR1727914
+
+echo "remember to check the fastq files"
+echo "$(head -1 SRR1727914_1.fastq)"
+echo "$(head -1 SRR1727914_2.fastq)"
+echo "Job finished: $(date +%F)"
