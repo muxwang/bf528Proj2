@@ -13,13 +13,15 @@ Data Curator:
 - results of FastQC: ./samples/data_curator on SCC
 
 Programmer:
+- Histogram of the FPKM values for all genes: In report
+- Plots and interpretation of the RSeQC output: In report
 
 Analyst:
 - Code: Project2_Analyst_Code.Rmd
 - Upregulated significant genes: Up_reg_DAVID_annotations.txt
 - Downregulated significant genes: down_reg_DAVID_results.txt
-- Table of top 10 differentially expressed genes: In paper
-- Table summarizing top clusters from DAVID: In paper
+- Table of top 10 differentially expressed genes: In report
+- Table summarizing top clusters from DAVID: In report
 
 
 Workflow:
